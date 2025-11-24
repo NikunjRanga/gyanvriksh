@@ -1,0 +1,142 @@
+// Prisma Schema for GyaanVriksh
+// Database: PostgreSQL (Supabase)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User Model
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  families  FamilyMember[]
+  stories   Story[]
+  lessons   Lesson[]
+
+  @@map("users")
+}
+
+// Family Model
+model Family {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  members    FamilyMember[]
+  stories     Story[]
+  knowledgeNodes KnowledgeNode[]
+
+  @@map("families")
+}
+
+// Family Member (Elder) Model
+model FamilyMember {
+  id        String   @id @default(uuid())
+  userId    String
+  familyId  String
+  name      String
+  role      String?  // e.g., "Grandfather", "Mother", "Uncle"
+  birthDate DateTime?
+  bio       String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  family    Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  stories   Story[]
+
+  @@unique([userId, familyId])
+  @@map("family_members")
+}
+
+// Story Model
+model Story {
+  id          String   @id @default(uuid())
+  title       String
+  elderName   String
+  userId      String
+  familyId    String?
+  mediaType   String   // "audio" or "video"
+  mediaUrl    String   // Supabase Storage URL
+  mediaSize   Int?     // File size in bytes
+  transcript  String?  // AI-generated transcript
+  description String?
+  prompt      String?  // The prompt/question used
+  date        DateTime @default(now())
+  tags        String[] @default([])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  family      Family?  @relation(fields: [familyId], references: [id], onDelete: SetNull)
+  lessons     Lesson[]
+  knowledgeNodes KnowledgeNode[]
+
+  @@map("stories")
+}
+
+// Lesson Model (AI-generated lessons from stories)
+model Lesson {
+  id          String   @id @default(uuid())
+  title       String
+  content     String   // Markdown content
+  summary     String?
+  storyId     String
+  userId      String
+  tags        String[] @default([])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  story       Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  knowledgeNodes KnowledgeNode[]
+
+  @@map("lessons")
+}
+
+// Knowledge Node (for AI Knowledge Mapper)
+model KnowledgeNode {
+  id          String   @id @default(uuid())
+  type        String   // "theme", "person", "event", "skill", "value"
+  title       String
+  description String?
+  familyId    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  family      Family?  @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  stories     Story[]
+  lessons     Lesson[]
+
+  @@map("knowledge_nodes")
+}
+
+// Family Tree Relationship (for cognitive tree visualization)
+model FamilyTreeRelation {
+  id          String   @id @default(uuid())
+  parentId    String?  // Parent knowledge node or family member
+  childId     String   // Child knowledge node or family member
+  relationType String  // "generation", "theme", "knowledge", "skill"
+  familyId    String?
+  createdAt   DateTime @default(now())
+
+  @@map("family_tree_relations")
+}
+
