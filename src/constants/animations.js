@@ -48,3 +48,5 @@ export const scrollReveal = {
   transition: { duration: 0.6 },
 };
 
+
+

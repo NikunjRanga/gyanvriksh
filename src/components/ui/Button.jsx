@@ -28,9 +28,11 @@ const Button = ({
   return (
     <motion.button
       type={type}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
+      whileHover={!props.disabled ? { scale: 1.02 } : {}}
+      whileTap={!props.disabled ? { scale: 0.98 } : {}}
+      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className} ${
+        props.disabled ? 'opacity-50 cursor-not-allowed' : ''
+      }`}
       onClick={onClick}
       {...props}
     >

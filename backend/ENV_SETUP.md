@@ -39,3 +39,4 @@ JWT_SECRET="your-jwt-secret-key"
 2. Copy the connection string (DATABASE_URL)
 3. Update the password in the connection string
 
+

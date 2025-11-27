@@ -149,3 +149,5 @@ import { IconBox, FeatureCard } from '../templates';
 6. **Consistent spacing** - use Section component padding
 7. **Animation consistency** - use animation constants
 
+
+

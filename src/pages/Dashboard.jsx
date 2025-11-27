@@ -9,6 +9,7 @@ import { Section, SectionTitle } from '../components/templates';
 import { Container } from '../components/ui';
 import { Button } from '../components/ui';
 import { Mic, Video, Upload, BookOpen } from 'lucide-react';
+import StoriesPreview from '../components/stories/StoriesPreview';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -64,6 +65,17 @@ const Dashboard = () => {
                 <h3 className="text-lg font-bold text-gray-900 mb-2">View Stories</h3>
                 <p className="text-sm text-gray-600">Browse your collection</p>
               </button>
+            </div>
+
+            {/* Recent Stories Preview */}
+            <div className="mt-12">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-bold text-gray-900">Recent Stories</h3>
+                <Button variant="outline" onClick={() => navigate('/stories')}>
+                  View All
+                </Button>
+              </div>
+              <StoriesPreview />
             </div>
 
             <div className="bg-neutral-light rounded-xl p-8 text-center">

@@ -3,12 +3,20 @@
  * Form for capturing story metadata and guided prompts
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '../ui';
 import { Container } from '../ui';
 
-const StoryCaptureForm = ({ mediaBlob, mediaType, onSave, onCancel }) => {
+const StoryCaptureForm = ({ 
+  mediaBlob, 
+  mediaType, 
+  onSave, 
+  onCancel, 
+  loading = false,
+  initialData = null,
+  isEditMode = false,
+}) => {
   const [formData, setFormData] = useState({
     title: '',
     elderName: '',
@@ -17,6 +25,24 @@ const StoryCaptureForm = ({ mediaBlob, mediaType, onSave, onCancel }) => {
     description: '',
     prompt: '',
   });
+
+  // Load initial data if provided (for edit mode)
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        title: initialData.title || '',
+        elderName: initialData.elderName || '',
+        date: initialData.date 
+          ? new Date(initialData.date).toISOString().split('T')[0]
+          : new Date().toISOString().split('T')[0],
+        tags: Array.isArray(initialData.tags) 
+          ? initialData.tags.join(', ')
+          : initialData.tags || '',
+        description: initialData.description || '',
+        prompt: initialData.prompt || '',
+      });
+    }
+  }, [initialData]);
 
   const guidedPrompts = [
     'Tell us about a significant life event that shaped who you are today.',
@@ -63,7 +89,9 @@ const StoryCaptureForm = ({ mediaBlob, mediaType, onSave, onCancel }) => {
         animate={{ opacity: 1, y: 0 }}
         className="max-w-3xl mx-auto bg-white rounded-xl p-8 shadow-lg"
       >
-        <h2 className="text-3xl font-bold text-gray-900 mb-6">Story Details</h2>
+        <h2 className="text-3xl font-bold text-gray-900 mb-6">
+          {isEditMode ? 'Edit Story Details' : 'Story Details'}
+        </h2>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Title */}
@@ -193,12 +221,44 @@ const StoryCaptureForm = ({ mediaBlob, mediaType, onSave, onCancel }) => {
             </div>
           )}
 
+          {/* Show existing media in edit mode */}
+          {isEditMode && initialData?.mediaUrl && (
+            <div className="bg-neutral-light p-4 rounded-lg">
+              <p className="text-sm text-gray-600 mb-2">
+                <strong>Current Media:</strong> {mediaType === 'audio' ? 'Audio' : 'Video'} file
+              </p>
+              {mediaType === 'audio' ? (
+                <audio controls src={initialData.mediaUrl} className="w-full">
+                  Your browser does not support the audio element.
+                </audio>
+              ) : (
+                <video controls src={initialData.mediaUrl} className="w-full max-h-64">
+                  Your browser does not support the video element.
+                </video>
+              )}
+              <p className="text-xs text-gray-500 mt-2">
+                Note: Media cannot be changed in edit mode. Delete and recreate to change media.
+              </p>
+            </div>
+          )}
+
           {/* Action Buttons */}
           <div className="flex gap-4 pt-4">
-            <Button type="submit" variant="primary" className="flex-1">
-              Save Story
+            <Button 
+              type="submit" 
+              variant="primary" 
+              className="flex-1"
+              disabled={loading}
+            >
+              {loading ? (loading === 'uploading' ? 'Uploading...' : 'Saving...') : 'Save Story'}
             </Button>
-            <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onCancel} 
+              className="flex-1"
+              disabled={loading}
+            >
               Cancel
             </Button>
           </div>
@@ -209,4 +269,5 @@ const StoryCaptureForm = ({ mediaBlob, mediaType, onSave, onCancel }) => {
 };
 
 export default StoryCaptureForm;
+
 

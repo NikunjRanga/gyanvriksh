@@ -21,28 +21,38 @@ export class UploadService {
   }
 
   async uploadStoryFile(file: Express.Multer.File) {
-    const fileName = this.generateFileName(file.originalname);
-    const filePath = `stories/${fileName}`;
+    try {
+      const fileName = this.generateFileName(file.originalname);
+      // Don't include bucket name in path - Supabase handles that
+      const filePath = fileName;
 
-    // Upload to Supabase Storage
-    const uploadResult = await this.supabaseService.uploadFile(
-      this.bucketName,
-      filePath,
-      file.buffer,
-      file.mimetype,
-    );
+      console.log(`Uploading file: ${fileName} to bucket: ${this.bucketName}`);
 
-    // Get public URL
-    const publicUrl = this.supabaseService.getPublicUrl(this.bucketName, filePath);
+      // Upload to Supabase Storage
+      const uploadResult = await this.supabaseService.uploadFile(
+        this.bucketName,
+        filePath,
+        file.buffer,
+        file.mimetype,
+      );
 
-    return {
-      url: publicUrl,
-      path: filePath,
-      fileName: fileName,
-      size: file.size,
-      mimeType: file.mimetype,
-      originalName: file.originalname,
-    };
+      // Get public URL
+      const publicUrl = this.supabaseService.getPublicUrl(this.bucketName, filePath);
+      
+      console.log(`Upload complete - File: ${fileName}, URL: ${publicUrl}`);
+
+      return {
+        url: publicUrl,
+        path: filePath,
+        fileName: fileName,
+        size: file.size,
+        mimeType: file.mimetype,
+        originalName: file.originalname,
+      };
+    } catch (error) {
+      console.error('Upload error:', error);
+      throw new Error(`Failed to upload file: ${error.message}`);
+    }
   }
 }
 

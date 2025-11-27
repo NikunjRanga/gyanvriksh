@@ -3,28 +3,45 @@
  * Complete flow for recording and capturing stories
  */
 
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Header, Footer } from '../components/layout';
 import { Section } from '../components/templates';
 import { VoiceRecorder, VideoRecorder, StoryCaptureForm } from '../components/recording';
 import { Button } from '../components/ui';
+import Notification from '../components/ui/Notification';
 import { ArrowLeft, Upload } from 'lucide-react';
+import { useStoriesStore } from '../store';
 
 const RecordStory = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { uploadFile, createStory } = useStoriesStore();
   const [step, setStep] = useState('select'); // select, record, form
   const [mediaType, setMediaType] = useState(null); // 'audio' or 'video'
   const [mediaBlob, setMediaBlob] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+  const [notification, setNotification] = useState(null);
+
+  useEffect(() => {
+    if (location.state?.message) {
+      setNotification({ message: location.state.message, type: 'success' });
+      setTimeout(() => setNotification(null), 5000);
+    }
+  }, [location.state]);
 
   const handleMediaTypeSelect = (type) => {
     setMediaType(type);
     setStep('record');
+    setError(null);
   };
 
   const handleRecordingComplete = (blob) => {
     setMediaBlob(blob);
     setStep('form');
+    setError(null);
   };
 
   const handleFileUpload = (e) => {
@@ -37,14 +54,56 @@ const RecordStory = () => {
       }
       setMediaBlob(file);
       setStep('form');
+      setError(null);
     }
   };
 
-  const handleSaveStory = (storyData) => {
-    // TODO: Save to backend/state management
-    console.log('Story saved:', storyData);
-    alert('Story saved successfully!');
-    navigate('/dashboard');
+  const handleSaveStory = async (storyData) => {
+    try {
+      setSaving(true);
+      setError(null);
+
+      // Step 1: Upload media file if we have a blob
+      let mediaUrl = storyData.mediaUrl;
+      let mediaSize = storyData.mediaSize;
+
+      if (mediaBlob && !mediaUrl) {
+        setUploading(true);
+        const uploadResult = await uploadFile(mediaBlob);
+        mediaUrl = uploadResult.url;
+        mediaSize = uploadResult.size;
+        setUploading(false);
+      }
+
+      // Step 2: Create story with uploaded media URL
+      const storyPayload = {
+        title: storyData.title,
+        elderName: storyData.elderName,
+        mediaType: mediaType,
+        mediaUrl: mediaUrl,
+        mediaSize: mediaSize,
+        description: storyData.description,
+        prompt: storyData.prompt,
+        date: storyData.date || new Date().toISOString(),
+        tags: storyData.tags || [],
+        familyId: storyData.familyId,
+        // Note: userId will be set by backend (default-user-id until Phase 2 auth)
+      };
+
+      await createStory(storyPayload);
+      
+      setSaving(false);
+      setNotification({ message: 'Story saved successfully!', type: 'success' });
+      setTimeout(() => {
+        navigate('/stories');
+      }, 1500);
+    } catch (err) {
+      const errorMessage = err.message || 'Failed to save story. Please try again.';
+      setError(errorMessage);
+      setNotification({ message: errorMessage, type: 'error' });
+      setSaving(false);
+      setUploading(false);
+    }
   };
 
   const handleCancel = () => {
@@ -56,6 +115,13 @@ const RecordStory = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
+      {notification && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification(null)}
+        />
+      )}
       <main className="flex-grow bg-neutral-light">
         <Section background="gradient" padding="py-12">
           <div className="flex items-center gap-4 mb-6">
@@ -170,11 +236,17 @@ const RecordStory = () => {
 
         {step === 'form' && (
           <Section background="neutral-light" padding="py-12">
+            {error && (
+              <div className="max-w-3xl mx-auto mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                {error}
+              </div>
+            )}
             <StoryCaptureForm
               mediaBlob={mediaBlob}
               mediaType={mediaType}
               onSave={handleSaveStory}
               onCancel={handleCancel}
+              loading={uploading ? 'uploading' : saving ? 'saving' : false}
             />
           </Section>
         )}
@@ -185,4 +257,5 @@ const RecordStory = () => {
 };
 
 export default RecordStory;
+
 

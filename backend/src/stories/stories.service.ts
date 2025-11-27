@@ -8,15 +8,39 @@ export class StoriesService {
   constructor(private prisma: PrismaService) {}
 
   async create(createStoryDto: CreateStoryDto) {
-    // For now, we'll use a placeholder userId
+    // For now, we'll use a default user
     // In Phase 2, this will come from authenticated user
-    const userId = createStoryDto['userId'] || 'default-user-id';
+    const defaultUserEmail = 'default@gyanvriksh.com';
+    
+    // Find or create default user
+    let user = await this.prisma.user.findUnique({
+      where: { email: defaultUserEmail },
+    });
+
+    if (!user) {
+      user = await this.prisma.user.create({
+        data: {
+          email: defaultUserEmail,
+          name: 'Default User',
+        },
+      });
+    }
+
+    const userId = user.id;
 
     const story = await this.prisma.story.create({
       data: {
-        ...createStoryDto,
-        userId,
+        title: createStoryDto.title,
+        elderName: createStoryDto.elderName,
+        mediaType: createStoryDto.mediaType,
+        mediaUrl: createStoryDto.mediaUrl,
+        mediaSize: createStoryDto.mediaSize,
+        description: createStoryDto.description,
+        prompt: createStoryDto.prompt,
         date: createStoryDto.date ? new Date(createStoryDto.date) : new Date(),
+        tags: createStoryDto.tags || [],
+        familyId: createStoryDto.familyId || null,
+        userId,
       },
       include: {
         user: {
@@ -148,4 +172,5 @@ export class StoriesService {
     return { message: 'Story deleted successfully', id: story.id };
   }
 }
+
 

@@ -237,3 +237,4 @@ const VideoRecorder = ({ onRecordingComplete }) => {
 
 export default VideoRecorder;
 
+

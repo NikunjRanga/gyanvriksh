@@ -22,8 +22,15 @@ export class StoriesController {
   @Post()
   @ApiOperation({ summary: 'Create a new story' })
   @ApiResponse({ status: 201, description: 'Story created successfully' })
-  create(@Body() createStoryDto: CreateStoryDto) {
-    return this.storiesService.create(createStoryDto);
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiResponse({ status: 500, description: 'Internal Server Error' })
+  async create(@Body() createStoryDto: CreateStoryDto) {
+    try {
+      return await this.storiesService.create(createStoryDto);
+    } catch (error) {
+      console.error('Error creating story:', error);
+      throw error;
+    }
   }
 
   @Get()
@@ -59,4 +66,5 @@ export class StoriesController {
     return this.storiesService.remove(id);
   }
 }
+
 

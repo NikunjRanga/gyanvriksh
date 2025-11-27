@@ -4,7 +4,7 @@
  */
 
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Home, About, Features, Blog, Dashboard, RecordStory } from './pages';
+import { Home, About, Features, Blog, Dashboard, RecordStory, StoriesList, EditStory } from './pages';
 
 function App() {
   return (
@@ -16,6 +16,8 @@ function App() {
         <Route path="/blog" element={<Blog />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/record" element={<RecordStory />} />
+        <Route path="/stories" element={<StoriesList />} />
+        <Route path="/stories/:id/edit" element={<EditStory />} />
       </Routes>
     </Router>
   );
