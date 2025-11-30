@@ -5,6 +5,11 @@
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
+// Debug: Log API URL (always, for troubleshooting)
+console.log('🔗 API Base URL:', API_BASE_URL);
+console.log('🔗 VITE_API_URL env:', import.meta.env.VITE_API_URL || 'NOT SET - Using default localhost');
+console.log('🔗 Environment mode:', import.meta.env.MODE);
+
 class ApiService {
   constructor(baseURL) {
     this.baseURL = baseURL;

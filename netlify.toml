@@ -1,0 +1,17 @@
+[build]
+  # Build command
+  command = "npm run build"
+  # Directory to publish (Vite outputs to 'dist')
+  publish = "dist"
+  # Environment variables (can also be set in Netlify Dashboard)
+  [build.environment]
+    VITE_API_URL = "https://gyanvriksh-1.onrender.com/api"
+
+# Redirect rules for React Router (handled by _redirects file)
+# The _redirects file in public/ will be copied to dist/ during build
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
