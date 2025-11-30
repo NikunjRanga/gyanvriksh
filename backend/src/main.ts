@@ -6,12 +6,40 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Enable CORS
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+  // Enable CORS - Always allow Netlify and localhost
+  const allowedOrigins = [
+    'http://localhost:5173',
+    'https://gyanvriksh.netlify.app',
+  ];
+  
+  // Add any additional origins from environment variable
+  if (process.env.FRONTEND_URL) {
+    const envUrls = process.env.FRONTEND_URL.split(',').map(url => url.trim());
+    envUrls.forEach(url => {
+      if (url && !allowedOrigins.includes(url)) {
+        allowedOrigins.push(url);
+      }
+    });
+  }
+  
   app.enableCors({
-    origin: frontendUrl,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.warn('🚫 CORS blocked origin:', origin);
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
+  
+  console.log('🌐 CORS enabled for origins:', allowedOrigins);
 
   // Global validation pipe
   app.useGlobalPipes(
@@ -39,8 +67,9 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
-  console.log(`🚀 Application is running on: http://localhost:${port}`);
+  console.log(`🚀 Application is running on port: ${port}`);
   console.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
+  console.log(`💚 Health Check: http://localhost:${port}/api/health`);
   console.log(`\n⚠️  Make sure you have created the "stories" bucket in Supabase Storage!`);
 }
 
